@@ -1,0 +1,28 @@
+﻿@inherits UmbracoViewPage<IUsn_Cmp_PageContent>
+
+@using USNStarterKit.USNHelpers;
+@using USNStarterKit.USNModels;
+
+@{
+    //Starter kit compatibility: 1.0
+
+    if (Model.MainImage != null)
+    {
+        USNImageStyle imageStyle = ThemeHelper.GetImageStyle(Model.ImageStyle);
+
+        <!-- IMAGE -->
+        <section class="content component image-component base-bg">
+            <div class="image @imageStyle.CircleClass">
+                <img class="lazyload @imageStyle.CircleClass" src="@Model.MainImage.GetCropUrl(cropAlias: imageStyle.CropAlias, width: imageStyle.WidthSmall, height: imageStyle.HeightSmall)" data-src="@Model.MainImage.GetCropUrl(cropAlias: imageStyle.CropAlias)" alt="@Model.MainImageAltText" />
+
+                @if (Model.MainImageCaption.HasValue())
+                {
+                    <div class="caption">
+                        @Model.MainImageCaption
+                    </div>
+                }
+            </div>
+        </section>
+        <!--// IMAGE -->
+    }
+}

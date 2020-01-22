@@ -1,0 +1,168 @@
+﻿@inherits UmbracoViewPage<USNStarterKit.USNModels.USNPodModel>
+
+@using USNStarterKit.USNHelpers;
+@using USNStarterKit.USNModels;
+
+@{
+    //Starter kit compatibility: 1.0
+
+    string itemClass = ViewData["itemClass"].ToString();
+    string componentID = ViewData["componentId"].ToString();
+    var model = Model.publishedContent == null ? Model.publishedElement : Model.publishedContent;
+    USNAnimation animation = ViewData["animation"] == null ? new USNAnimation() : (USNAnimation)ViewData["animation"];
+
+    USNImageStyle imageStyle = ThemeHelper.GetImageStyle(model.Value<string>("imageStyle"));
+
+    string lightWindow = String.Empty;
+    string title = String.Empty;
+    string footer = String.Empty;
+
+    if (!model.Value<bool>("disableLightWindow"))
+    {
+        lightWindow = " data-toggle=\"lightbox\" data-type=\"image\" data-gallery=\"galleryname-" + componentID + "\"";
+
+        if (model.HasValue("lightWindowTitle"))
+        {
+            title = "data-title=\"" + model.Value<string>("lightWindowTitle") + "\"";
+        }
+
+        if (model.HasValue("lightWindowFooter"))
+        {
+            footer = "data-footer=\"" + model.Value<string>("lightWindowFooter") + "\"";
+        }
+    }
+
+    if (model.HasValue("videoSource") && (model.Value<string>("videoSource") == "youtube" || model.Value<string>("videoSource") == "vimeo") && model.HasValue("video3rdParty"))
+    {
+        USNVideo video = VideoHelper.GetVideo(model.Value<string>("video3rdParty"));
+
+        string videoImageSrc = String.Empty;
+        string videoImageDataSrc = String.Empty;
+
+        if (!model.Value<bool>("disableLightWindow"))
+        {
+            videoImageSrc = model.HasValue("galleryImageThumbnail") ? model.Value<IPublishedContent>("galleryImageThumbnail").GetCropUrl(cropAlias: imageStyle.CropAlias, width: imageStyle.WidthSmall, height: imageStyle.HeightSmall) : video.VideoImage;
+            videoImageDataSrc = model.HasValue("galleryImageThumbnail") ? model.Value<IPublishedContent>("galleryImageThumbnail").GetCropUrl(cropAlias: imageStyle.CropAlias) : video.VideoImage;
+        }
+        else
+        {
+            imageStyle.CircleClass = String.Empty;
+        }
+
+        <div class="item @itemClass @imageStyle.CircleClass item_video @animation.AnimationClass" data-os-animation="@animation.AnimationStyle" data-os-animation-delay="@animation.AnimationDelay">
+            <div class="inner">
+            @if (model.Value<bool>("disableLightWindow") && video.VideoID != String.Empty)
+            {
+                string videoSrc = String.Empty;
+
+                if (model.Value<string>("videoSource") == "youtube")
+                {
+                    videoSrc = "https://www.youtube.com/embed/" + video.VideoID + "?playsinline=1&controls=1&showinfo=1&playlist=" + video.VideoID;
+                }
+                else
+                {
+                    videoSrc = "https://player.vimeo.com/video/" + video.VideoID + "?playsinline=1&controls=1&background=0&autoplay=0";
+                }
+
+                <div class="image @imageStyle.CircleClass video embed-responsive embed-responsive-16by9">
+                    <iframe class="video-player embed-responsive-item lazyload" type="text/html" width="640" height="360" src="@videoSrc" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+                    @if (model.HasValue("videoCaption"))
+                    {
+                        <div class="caption">@(model.Value<string>("videoCaption"))</div>
+                    }
+                </div>
+            }
+            else
+            {
+                if (model.HasValue("lightWindowTitle"))
+                {
+                    title = "data-title=\"" + model.Value<string>("lightWindowTitle") + "\"";
+                }
+
+                if (model.HasValue("lightWindowFooter"))
+                {
+                    footer = "data-footer=\"" + model.Value<string>("lightWindowFooter") + "\"";
+                }
+
+                <a href="@video.VideoURLModified" @Html.Raw(title) @Html.Raw(footer) data-toggle="lightbox" @Html.Raw(video.VideoDataRemote) data-gallery="galleryname-@componentID" data-width="1350">
+
+                    <div class="image @imageStyle.CircleClass video">
+                        <img class="@imageStyle.CircleClass lazyload" src="@videoImageSrc" data-src="@videoImageDataSrc" alt="@(model.Value<string>("thumbnailImageAltText"))">
+                        <div class="overlayicon">
+                            <i class="icon usn_ion-md-play"></i>
+                        </div>
+                        @if (model.HasValue("videoCaption"))
+                        {
+                            <div class="caption">@(model.Value<string>("videoCaption"))</div>
+                        }
+                    </div>
+                </a>
+            }
+           
+            </div>
+        </div>
+
+    }
+
+    else if (model.HasValue("videoSource") && model.Value<string>("videoSource") == "mp4" && model.HasValue("videoMp4"))
+    {
+        string videoImageSrc = String.Empty;
+        string videoImageDataSrc = String.Empty;
+
+        if (!model.Value<bool>("disableLightWindow"))
+        {
+            videoImageSrc = model.HasValue("galleryImageThumbnail") ? model.Value<IPublishedContent>("galleryImageThumbnail").GetCropUrl(cropAlias: imageStyle.CropAlias, width: imageStyle.WidthSmall, height: imageStyle.HeightSmall) : String.Empty;
+            videoImageDataSrc = model.HasValue("galleryImageThumbnail") ? model.Value<IPublishedContent>("galleryImageThumbnail").GetCropUrl(cropAlias: imageStyle.CropAlias) : String.Empty;
+        }
+        else
+        {
+            imageStyle.CircleClass = String.Empty;
+        }
+
+        <div class="item @itemClass @imageStyle.CircleClass item_video @animation.AnimationClass" data-os-animation="@animation.AnimationStyle" data-os-animation-delay="@animation.AnimationDelay">
+            <div class="inner">
+                @if (model.Value<bool>("disableLightWindow"))
+                {
+                    <div class="image @imageStyle.CircleClass video embed-responsive embed-responsive-16by9">
+                        <video class="embed-responsive-item" controls>
+                            <source src="@(model.Value<IPublishedContent>("videoMp4").Url)" type="video/mp4">
+                        </video>
+                        @if (model.HasValue("videoCaption"))
+                        {
+                            <div class="caption">@(model.Value<string>("videoCaption"))</div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    if (model.HasValue("lightWindowTitle"))
+                    {
+                        title = "data-title=\"" + model.Value<string>("lightWindowTitle") + "\"";
+                    }
+
+                    if (model.HasValue("lightWindowFooter"))
+                    {
+                        footer = "data-footer=\"" + model.Value<string>("lightWindowFooter") + "\"";
+                    }
+
+                    <a href="@(model.Value<IPublishedContent>("videoMp4").Url)" data-type="video" @Html.Raw(title) @Html.Raw(footer) data-toggle="lightbox" data-gallery="galleryname-@componentID" data-width="1350" data-height="750">
+
+                        <div class="image @imageStyle.CircleClass video">
+                            <img class="@imageStyle.CircleClass lazyload" src="@videoImageSrc" data-src="@videoImageDataSrc" alt="@(model.Value<string>("thumbnailImageAltText"))">
+                            <div class="overlayicon">
+                                <i class="icon usn_ion-md-play"></i>
+                            </div>
+                            @if (model.HasValue("videoCaption"))
+                            {
+                                <div class="caption">@(model.Value<string>("videoCaption"))</div>
+                            }
+                        </div>
+
+                    </a>
+                }
+
+            </div>
+        </div>
+    }
+
+}

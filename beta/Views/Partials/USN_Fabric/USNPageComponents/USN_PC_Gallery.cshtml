@@ -1,0 +1,253 @@
+﻿@inherits UmbracoViewPage<Usn_Pc_Gallery_AN>
+
+@using USNStarterKit.USNHelpers;
+@using USNStarterKit.USNModels;
+
+@{
+    //Starter kit compatibility: 1.0
+
+    string viewPath = ViewData["viewPath"].ToString();
+    string pageLayout = ViewData["pageLayout"].ToString();
+    string backgroundImageStyle = ThemeHelper.GetBackgroundImageStyle(Model.BackgroundImageOptions, Model.BackgroundImage);
+    string backGroundColor = Model.BackgroundColor.label + "-bg";
+    USNAnimation animation = ThemeHelper.GetAnimationSettings(Model.Animate,Model.AnimationDelay,Model.AnimationStyle);
+
+    <section class="content component gallery-component @backGroundColor @Model.CustomComponentClasses" id="@Html.Raw("pos_" + Model.Id)" @Html.Raw(backgroundImageStyle)>
+
+        @if (pageLayout == "pageLayoutFull")
+        {
+            if(Model.ComponentWidth == "componentWidthCenter")
+            {
+                @:<div class="container"><div class="row justify-content-center"><div class="content-col center-col col-lg-6 col-12 col">
+            }
+            else if(Model.ComponentWidth == "componentWidthFull")
+            {
+                @:<div class="container-fluid">
+            }
+            else
+            {
+                @:<div class="container">
+            }
+
+        }
+
+        @Html.Partial(viewPath + "/USNMiscPageElements/USN_ComponentIntro", @Model as IUsn_Cmp_IntroOutro, new ViewDataDictionary { { "animation", animation }, { "backgroundColor", Model.BackgroundColor.label } })
+
+        @if (Model.ImageVideo != null && Model.ImageVideo.Any())
+        {
+            USNCarouselSettings carouselSettings = ThemeHelper.GetCarouselSettings(Model.ItemsPerRow, Model.EnableCarousel, Model.AutoRotateSpeed, Model.ShowDots, Model.ShowArrows);
+
+            USNImageStyle imageStyle = ThemeHelper.GetImageStyle(Model.ImageStyle);
+
+            <div class="component-main row @carouselSettings.CarouselRowClass listing listing_basic-grid listing_gallery" @Html.Raw(carouselSettings.SlickAttributes)>
+
+                @foreach (IPublishedElement galleryItem in Model.ImageVideo)
+                {
+                    string lightWindow = String.Empty;
+                    string title = String.Empty;
+                    string footer = String.Empty;
+
+                    if (galleryItem.ContentType.Alias == Usn_Nc_GalleryImage.ModelTypeAlias)
+                    {
+                        Usn_Nc_GalleryImage galleryImage = (Usn_Nc_GalleryImage)galleryItem;
+
+                        if (!galleryImage.DisableLightWindow)
+                        {
+                            lightWindow = " data-toggle=\"lightbox\" data-type=\"image\" data-gallery=\"galleryname-" + Model.Id + "\"";
+
+                            if (galleryImage.LightWindowTitle.HasValue())
+                            {
+                                title = "data-title=\"" + galleryImage.LightWindowTitle + "\"";
+                            }
+
+                            if (galleryImage.LightWindowFooter.HasValue())
+                            {
+                                footer = "data-footer=\"" + galleryImage.LightWindowFooter + "\"";
+                            }
+                        }
+
+                        if (galleryImage.Image != null)
+                        {
+
+                            string linkUrl = String.Empty;
+                            string linkTarget = String.Empty;
+                            string linkTitle = String.Empty;
+
+                            if (galleryImage.DisableLightWindow && galleryImage.ImageLink.HasValue())
+                            {
+                                if (galleryImage.ImageLink.HasValue())
+                                {
+                                    linkUrl = galleryImage.ImageLink.link.LinkUrl;
+                                    linkTarget = galleryImage.ImageLink.link.LinkTarget;
+                                    linkTitle = galleryImage.ImageLink.link.LinkTitle;
+                                }
+                            }
+                            else if (!galleryImage.DisableLightWindow)
+                            {
+                                linkUrl = galleryImage.Image.Url;
+                            }
+
+                            <div class="item @imageStyle.CircleClass @carouselSettings.ItemsClass @animation.AnimationClass" data-os-animation="@animation.AnimationStyle" data-os-animation-delay="@animation.AnimationDelay">
+                                <div class="image @imageStyle.CircleClass">
+                                    @if (linkUrl != String.Empty)
+                                    {
+                                        @:<a href="@linkUrl" @Html.Raw(title) @Html.Raw(footer) target="@linkTarget" @Html.Raw(lightWindow) @Html.Raw(linkTitle)>
+                                    }
+                                    <img class="@imageStyle.CircleClass lazyload" src="@galleryImage.Image.GetCropUrl(cropAlias: imageStyle.CropAlias, width: imageStyle.WidthSmall, height: imageStyle.HeightSmall)" data-src="@galleryImage.Image.GetCropUrl(cropAlias: imageStyle.CropAlias)" alt="@galleryImage.ThumbnailImageAltText">
+
+                                    @if (linkUrl != String.Empty)
+                                    {
+                                    @:</a>
+                                    }
+                                    @if (galleryImage.ImageCaption.HasValue())
+                                    {
+                                        <div class="caption">@galleryImage.ImageCaption</div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+
+                    else
+                    {
+                        Usn_Nc_GalleryVideo galleryVideo = (Usn_Nc_GalleryVideo)galleryItem;
+
+                        if (galleryVideo.VideoSource.HasValue() && (galleryVideo.VideoSource == "youtube" || galleryVideo.VideoSource == "vimeo") && galleryVideo.Video3rdParty.HasValue())
+                        {
+                            USNVideo video = VideoHelper.GetVideo(galleryVideo.Video3rdParty);
+
+                            string videoImageSrc = String.Empty;
+                            string videoImageDataSrc = String.Empty;
+
+                            if (!galleryVideo.DisableLightWindow)
+                            {
+                                videoImageSrc = galleryVideo.GalleryImageThumbnail != null ? galleryVideo.GalleryImageThumbnail.GetCropUrl(cropAlias: imageStyle.CropAlias, width: imageStyle.WidthSmall, height: imageStyle.HeightSmall) : video.VideoImage;
+                                videoImageDataSrc = galleryVideo.GalleryImageThumbnail != null ? galleryVideo.GalleryImageThumbnail.GetCropUrl(cropAlias: imageStyle.CropAlias) : video.VideoImage;
+                            }
+                            else
+                            {
+                                imageStyle.CircleClass = String.Empty;
+                            }
+
+                            <div class="item @imageStyle.CircleClass @carouselSettings.ItemsClass @animation.AnimationClass" data-os-animation="@animation.AnimationStyle" data-os-animation-delay="@animation.AnimationDelay">
+                                @if (galleryVideo.DisableLightWindow && video.VideoID != String.Empty)
+                                {
+                                    string videoSrc = String.Empty;
+
+                                    if (galleryVideo.VideoSource == "youtube")
+                                    {
+                                        videoSrc = "https://www.youtube.com/embed/" + video.VideoID + "?playsinline=1&controls=1&showinfo=1&playlist=" + video.VideoID;
+                                    }
+                                    else
+                                    {
+                                        videoSrc = "https://player.vimeo.com/video/" + video.VideoID + "?playsinline=1&controls=1&background=0&autoplay=0";
+                                    }
+
+                                    <div class="image @imageStyle.CircleClass video embed-responsive embed-responsive-16by9">
+                                        <iframe class="video-player embed-responsive-item lazyload" type="text/html" width="640" height="360" src="@videoSrc" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+                                    </div>
+                                }
+                                else
+                                {
+                                    if (galleryVideo.LightWindowTitle.HasValue())
+                                    {
+                                        title = "data-title=\"" + galleryVideo.LightWindowTitle + "\"";
+                                    }
+
+                                    if (galleryVideo.LightWindowFooter.HasValue())
+                                    {
+                                        footer = "data-footer=\"" + galleryVideo.LightWindowFooter + "\"";
+                                    }
+
+                                    <a href="@video.VideoURLModified" @Html.Raw(title) @Html.Raw(footer) data-toggle="lightbox" @Html.Raw(video.VideoDataRemote) data-gallery="galleryname-@Model.Id" data-width="1350">
+
+                                        <div class="image @imageStyle.CircleClass video">
+                                            <img class="@imageStyle.CircleClass lazyload" src="@videoImageSrc" data-src="@videoImageDataSrc" alt="@galleryVideo.ThumbnailImageAltText">
+                                            <div class="overlayicon">
+                                                <i class="icon usn_ion-md-play"></i>
+                                            </div>
+                                        </div>
+                                    </a>
+                                }
+                                @if (galleryVideo.VideoCaption.HasValue())
+                                {
+                                    <div class="caption">@galleryVideo.VideoCaption</div>
+                                }
+                            </div>
+
+                        }
+
+                        else if (galleryVideo.VideoSource.HasValue() && galleryVideo.VideoSource == "mp4" && galleryVideo.VideoMp4.HasValue())
+                        {
+                            string videoImageSrc = String.Empty;
+                            string videoImageDataSrc = String.Empty;
+
+                            if (!galleryVideo.DisableLightWindow)
+                            {
+                                videoImageSrc = galleryVideo.GalleryImageThumbnail != null ? galleryVideo.GalleryImageThumbnail.GetCropUrl(cropAlias: imageStyle.CropAlias, width: imageStyle.WidthSmall, height: imageStyle.HeightSmall) : String.Empty;
+                                videoImageDataSrc = galleryVideo.GalleryImageThumbnail != null ? galleryVideo.GalleryImageThumbnail.GetCropUrl(cropAlias: imageStyle.CropAlias) : String.Empty;
+                            }
+                            else
+                            {
+                                imageStyle.CircleClass = String.Empty;
+                            }
+
+                            <div class="item @imageStyle.CircleClass @carouselSettings.ItemsClass">
+                                @if (galleryVideo.DisableLightWindow)
+                                {
+                                    <div class="image @imageStyle.CircleClass video embed-responsive embed-responsive-16by9">
+                                        <video class="embed-responsive-item" controls>
+                                            <source src="@galleryVideo.VideoMp4.Url" type="video/mp4">
+                                        </video>
+                                    </div>
+                                }
+                                else
+                                {
+                                    if (galleryVideo.LightWindowTitle.HasValue())
+                                    {
+                                        title = "data-title=\"" + galleryVideo.LightWindowTitle + "\"";
+                                    }
+
+                                    if (galleryVideo.LightWindowFooter.HasValue())
+                                    {
+                                        footer = "data-footer=\"" + galleryVideo.LightWindowFooter + "\"";
+                                    }
+
+                                    <a href="@galleryVideo.VideoMp4.Url" data-type="video" @Html.Raw(title) @Html.Raw(footer) data-toggle="lightbox" data-gallery="galleryname-@Model.Id" data-width="1350" data-height="750">
+
+                                        <div class="image @imageStyle.CircleClass video">
+                                            <img class="@imageStyle.CircleClass lazyload" src="@videoImageSrc" data-src="@videoImageDataSrc" alt="@galleryVideo.ThumbnailImageAltText">
+                                            <div class="overlayicon">
+                                                <i class="icon usn_ion-md-play"></i>
+                                            </div>
+                                        </div>
+                                    </a>
+                                }
+                                @if (galleryVideo.VideoCaption.HasValue())
+                                {
+                                    <div class="caption">@galleryVideo.VideoCaption</div>
+                                }
+                            </div>
+                        }
+                    }
+                }
+
+            </div>
+        }
+
+        @Html.Partial(viewPath + "/USNMiscPageElements/USN_ComponentOutro", @Model as IUsn_Cmp_IntroOutro, new ViewDataDictionary { { "animation", animation }, { "backgroundColor", Model.BackgroundColor.label } })
+
+        @if (pageLayout == "pageLayoutFull")
+        {
+            if (Model.ComponentWidth == "componentWidthCenter")
+            {
+            @:</div></div></div>
+            }
+            else
+            {
+                @:</div>
+            }
+        }
+
+    </section>
+}

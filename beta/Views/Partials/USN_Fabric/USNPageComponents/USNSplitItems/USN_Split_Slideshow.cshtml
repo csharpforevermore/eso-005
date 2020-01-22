@@ -1,0 +1,248 @@
+﻿@inherits UmbracoViewPage<Usn_Pc_SplitComponent_AN>
+
+@using USNStarterKit.USNHelpers;
+@using USNStarterKit.USNModels;
+
+@{
+    //Starter kit compatibility: 1.0
+
+    string splitSide = ViewData["splitSide"].ToString();
+    string colWidthDesktop = splitSide == "First" ? "col-lg-" + Model.DesktopColumnWidthFirst : "col-lg-" + Model.DesktopColumnWidthSecond;
+    string colWidthTablet = splitSide == "First" ? "col-md-" + Model.TabletColumnWidthFirst : "col-md-" + Model.TabletColumnWidthSecond;
+    string itemDesktopOrder = ThemeHelper.GetSplitDesktopTabletOrderClass(splitSide, Model.DesktopTabletOrder);
+    string itemMobileOrder = ThemeHelper.GetSplitMobileOrderClass(splitSide, Model.MobileOrder);
+    string verticalAlignment = splitSide == "First" ? (Model.VerticalPositionFirst.HasValue() ? Model.VerticalPositionFirst.ToString() : String.Empty) : (Model.VerticalPositionSecond.HasValue() ? Model.VerticalPositionSecond.ToString() : String.Empty);
+    string verticalAlignmentClass = ThemeHelper.GetVerticalAlignmentClass(verticalAlignment);
+
+    IEnumerable<IPublishedElement> imageVideos = splitSide == "First" ? Model.SlideImageVideoFirst : Model.SlideImageVideoSecond;
+    USNHeading heading = splitSide == "First" ? Model.SlideHeadingFirst : Model.SlideHeadingSecond;
+    string secondaryHeading = splitSide == "First" ? Model.SlideSecondaryHeadingFirst : Model.SlideSecondaryHeadingSecond;
+    USNAnimation animation = splitSide == "First" ? ThemeHelper.GetAnimationSettings(Model.AnimateFirst,Model.AnimationDelayFirst,Model.AnimationStyleFirst) : ThemeHelper.GetAnimationSettings(Model.AnimateSecond,Model.AnimationDelaySecond,Model.AnimationStyleSecond);
+
+    if (imageVideos != null && imageVideos.Any())
+    {
+        USNCarouselSettings carouselSettings = splitSide == "First" ? ThemeHelper.GetCarouselSettings("itemsRow_1", true, Model.SlideAutoRotateSpeedFirst, Model.SlideShowDotsFirst, Model.SlideShowArrowsFirst) : ThemeHelper.GetCarouselSettings("itemsRow_1", true, Model.SlideAutoRotateSpeedSecond, Model.SlideShowDotsSecond, Model.SlideShowArrowsSecond);
+        string slideImageStyle = splitSide == "First" ? Model.SlideImageStyleFirst : Model.SlideImageStyleSecond;
+
+        USNImageStyle imageStyle = ThemeHelper.GetImageStyle(slideImageStyle);
+
+        <div class="item item_block item_slideshow-block @verticalAlignmentClass @colWidthDesktop @colWidthTablet @itemDesktopOrder @itemMobileOrder col-12 @animation.AnimationClass" data-os-animation="@animation.AnimationStyle" data-os-animation-delay="@animation.AnimationDelay">
+
+            @if (heading.HasValue() || secondaryHeading.HasValue())
+            {
+                <div class="component-introduction @animation.AnimationClass" data-os-animation="@animation.AnimationStyle" data-os-animation-delay="@animation.AnimationDelay">
+
+                    @if (secondaryHeading.HasValue())
+                    {
+                        <p class="secondary-heading @(Model.BackgroundColor.label)-secondary-heading @animation.AnimationClass" data-os-animation="@animation.AnimationStyle" data-os-animation-delay="@animation.AnimationDelay">@secondaryHeading</p>
+                    }
+                    @if (heading.HasValue())
+                    {
+                        @Html.Raw(String.Format("<{0} class=\"heading main {1}-heading\">{2}</{0}>", heading.HeadingTag, Model.BackgroundColor.label, heading.Text))
+                    }
+
+                </div>
+            }
+
+            <!-- Slides -->
+            <div class="slides" @Html.Raw(carouselSettings.SlickAttributes)>
+
+                @foreach (IPublishedElement galleryItem in imageVideos)
+                {
+                    string lightWindow = String.Empty;
+                    string title = String.Empty;
+                    string footer = String.Empty;
+
+                    if (galleryItem.ContentType.Alias == Usn_Nc_GalleryImage.ModelTypeAlias)
+                    {
+                        Usn_Nc_GalleryImage galleryImage = (Usn_Nc_GalleryImage)galleryItem;
+
+                        if (!galleryImage.DisableLightWindow)
+                        {
+                            lightWindow = " data-toggle=\"lightbox\" data-type=\"image\" data-gallery=\"galleryname-" + Model.Id + "\"";
+
+                            if (galleryImage.LightWindowTitle.HasValue())
+                            {
+                                title = "data-title=\"" + galleryImage.LightWindowTitle + "\"";
+                            }
+
+                            if (galleryImage.LightWindowFooter.HasValue())
+                            {
+                                footer = "data-footer=\"" + galleryImage.LightWindowFooter + "\"";
+                            }
+                        }
+
+                        if (galleryImage.Image != null)
+                        {
+
+                            string linkUrl = String.Empty;
+                            string linkTarget = String.Empty;
+                            string linkTitle = String.Empty;
+
+                            if (galleryImage.DisableLightWindow && galleryImage.ImageLink.HasValue())
+                            {
+                                if (galleryImage.ImageLink.HasValue())
+                                {
+                                    linkUrl = galleryImage.ImageLink.link.LinkUrl;
+                                    linkTarget = galleryImage.ImageLink.link.LinkTarget;
+                                    linkTitle = galleryImage.ImageLink.link.LinkTitle;
+                                }
+                            }
+                            else if (!galleryImage.DisableLightWindow)
+                            {
+                                linkUrl = galleryImage.Image.Url;
+                            }
+
+                            <div class="item @imageStyle.CircleClass">
+                                <div class="image @imageStyle.CircleClass">
+                                    @if (linkUrl != String.Empty)
+                                    {
+                                        @:<a href="@linkUrl" @Html.Raw(title) @Html.Raw(footer) target="@linkTarget" @Html.Raw(lightWindow) @Html.Raw(linkTitle)>
+                                    }
+                                    
+                                    <img class="@imageStyle.CircleClass lazyload" src="@galleryImage.Image.GetCropUrl(cropAlias: imageStyle.CropAlias, width: imageStyle.WidthSmall, height: imageStyle.HeightSmall)" data-src="@galleryImage.Image.GetCropUrl(cropAlias: imageStyle.CropAlias)" alt="@galleryImage.ThumbnailImageAltText">
+
+                                    @if (linkUrl != String.Empty)
+                                    {
+                                        @:</a>
+                                    }
+                                    @if (galleryImage.ImageCaption.HasValue())
+                                    {
+                                        <div class="caption">@galleryImage.ImageCaption</div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+
+                    else
+                    {
+                        Usn_Nc_GalleryVideo galleryVideo = (Usn_Nc_GalleryVideo)galleryItem;
+
+                        if (galleryVideo.VideoSource.HasValue() && (galleryVideo.VideoSource == "youtube" || galleryVideo.VideoSource == "vimeo") && galleryVideo.Video3rdParty.HasValue())
+                        {
+                            USNVideo video = VideoHelper.GetVideo(galleryVideo.Video3rdParty);
+
+                            string videoImageSrc = String.Empty;
+                            string videoImageDataSrc = String.Empty;
+
+                            if (!galleryVideo.DisableLightWindow)
+                            {
+                                videoImageSrc = galleryVideo.GalleryImageThumbnail != null ? galleryVideo.GalleryImageThumbnail.GetCropUrl(cropAlias: imageStyle.CropAlias, width: imageStyle.WidthSmall, height: imageStyle.HeightSmall) : video.VideoImage;
+                                videoImageDataSrc = galleryVideo.GalleryImageThumbnail != null ? galleryVideo.GalleryImageThumbnail.GetCropUrl(cropAlias: imageStyle.CropAlias) : video.VideoImage;
+                            }
+                            else
+                            {
+                                imageStyle.CircleClass = String.Empty;
+                            }
+
+                            <div class="item @imageStyle.CircleClass ">
+                                @if (galleryVideo.DisableLightWindow && video.VideoID != String.Empty)
+                                {
+                                    string videoSrc = String.Empty;
+
+                                    if (galleryVideo.VideoSource == "youtube")
+                                    {
+                                        videoSrc = "https://www.youtube.com/embed/" + video.VideoID + "?playsinline=1&controls=1&showinfo=1&playlist=" + video.VideoID;
+                                    }
+                                    else
+                                    {
+                                        videoSrc = "https://player.vimeo.com/video/" + video.VideoID + "?playsinline=1&controls=1&background=0&autoplay=0";
+                                    }
+
+                                    <div class="image @imageStyle.CircleClass video embed-responsive embed-responsive-16by9">
+                                        <iframe class="video-player embed-responsive-item lazyload" type="text/html" width="640" height="360" src="@videoSrc" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+                                    </div>
+                                }
+                                else
+                                {
+                                    if (galleryVideo.LightWindowTitle.HasValue())
+                                    {
+                                        title = "data-title=\"" + galleryVideo.LightWindowTitle + "\"";
+                                    }
+
+                                    if (galleryVideo.LightWindowFooter.HasValue())
+                                    {
+                                        footer = "data-footer=\"" + galleryVideo.LightWindowFooter + "\"";
+                                    }
+
+                                    <a href="@video.VideoURLModified" @Html.Raw(title) @Html.Raw(footer) data-toggle="lightbox" @Html.Raw(video.VideoDataRemote) data-gallery="galleryname-@Model.Id" data-width="1350">
+
+                                        <div class="image @imageStyle.CircleClass video">
+                                            <img class="@imageStyle.CircleClass lazyload" src="@videoImageSrc" data-src="@videoImageDataSrc" alt="@galleryVideo.ThumbnailImageAltText">
+                                            <div class="overlayicon">
+                                                <i class="icon usn_ion-md-play"></i>
+                                            </div>
+                                        </div>
+                                    </a>
+                                }
+                                @if (galleryVideo.VideoCaption.HasValue())
+                                {
+                                    <div class="caption">@galleryVideo.VideoCaption</div>
+                                }
+                            </div>
+
+                        }
+
+                        else if (galleryVideo.VideoSource.HasValue() && galleryVideo.VideoSource == "mp4" && galleryVideo.VideoMp4.HasValue())
+                        {
+                            string videoImageSrc = String.Empty;
+                            string videoImageDataSrc = String.Empty;
+
+                            if (!galleryVideo.DisableLightWindow)
+                            {
+                                videoImageSrc = galleryVideo.GalleryImageThumbnail != null ? galleryVideo.GalleryImageThumbnail.GetCropUrl(cropAlias: imageStyle.CropAlias, width: imageStyle.WidthSmall, height: imageStyle.HeightSmall) : String.Empty;
+                                videoImageDataSrc = galleryVideo.GalleryImageThumbnail != null ? galleryVideo.GalleryImageThumbnail.GetCropUrl(cropAlias: imageStyle.CropAlias) : String.Empty;
+                            }
+                            else
+                            {
+                                imageStyle.CircleClass = String.Empty;
+                            }
+
+                            <div class="item @imageStyle.CircleClass">
+                                @if (galleryVideo.DisableLightWindow)
+                                {
+                                    <div class="image @imageStyle.CircleClass video embed-responsive embed-responsive-16by9">
+                                        <video class="embed-responsive-item" controls>
+                                            <source src="@galleryVideo.VideoMp4.Url" type="video/mp4">
+                                        </video>
+                                    </div>
+                                }
+                                else
+                                {
+                                    if (galleryVideo.LightWindowTitle.HasValue())
+                                    {
+                                        title = "data-title=\"" + galleryVideo.LightWindowTitle + "\"";
+                                    }
+
+                                    if (galleryVideo.LightWindowFooter.HasValue())
+                                    {
+                                        footer = "data-footer=\"" + galleryVideo.LightWindowFooter + "\"";
+                                    }
+
+                                    <a href="@galleryVideo.VideoMp4.Url" data-type="video" @Html.Raw(title) @Html.Raw(footer) data-toggle="lightbox" data-gallery="galleryname-@Model.Id" data-width="1350" data-height="750">
+
+                                        <div class="image @imageStyle.CircleClass video">
+                                            <img class="@imageStyle.CircleClass lazyload" src="@videoImageSrc" data-src="@videoImageDataSrc" alt="@galleryVideo.ThumbnailImageAltText">
+                                            <div class="overlayicon">
+                                                <i class="icon usn_ion-md-play"></i>
+                                            </div>
+                                        </div>
+                                    </a>
+                                }
+                                @if (galleryVideo.VideoCaption.HasValue())
+                                {
+                                    <div class="caption">@galleryVideo.VideoCaption</div>
+                                }
+                            </div>
+                        }
+                    }
+                }
+
+            </div>
+            <!--// Slides -->
+
+        </div>
+
+    }
+}

@@ -1,0 +1,79 @@
+﻿@inherits UmbracoViewPage<USNStarterKit.USNModels.USNPodModel>
+
+@using USNStarterKit.USNHelpers;
+@using USNStarterKit.USNModels;
+
+@{
+    //Starter kit compatibility: 1.0
+
+    string itemClass = ViewData["itemClass"].ToString();
+    string componentID = ViewData["componentId"].ToString();
+    USNAnimation animation = ViewData["animation"] == null ? new USNAnimation() : (USNAnimation)ViewData["animation"];
+
+    var model = Model.publishedContent == null ? Model.publishedElement : Model.publishedContent;
+
+    USNImageStyle imageStyle = ThemeHelper.GetImageStyle(model.Value<string>("imageStyle"));
+
+    string lightWindow = String.Empty;
+    string title = String.Empty;
+    string footer = String.Empty;
+
+    if (!model.Value<bool>("disableLightWindow"))
+    {
+        lightWindow = " data-toggle=\"lightbox\" data-type=\"image\" data-gallery=\"galleryname-" + componentID + "\"";
+
+        if (model.HasValue("lightWindowTitle"))
+        {
+            title = "data-title=\"" + model.Value<string>("lightWindowTitle") + "\"";
+        }
+
+        if (model.HasValue("lightWindowFooter"))
+        {
+            footer = "data-footer=\"" + model.Value<string>("lightWindowFooter") + "\"";
+        }
+    }
+
+    if (model.HasValue("image"))
+    {
+
+        string linkUrl = String.Empty;
+        string linkTarget = String.Empty;
+        string linkTitle = String.Empty;
+
+        if (model.Value<bool>("disableLightWindow") && model.HasValue("imageLink"))
+        {
+            if (model.HasValue("imageLink"))
+            {
+                linkUrl = model.Value<USNMultiUrlPicker>("imageLink").link.LinkUrl;
+                linkTarget = model.Value<USNMultiUrlPicker>("imageLink").link.LinkTarget;
+                linkTitle = model.Value<USNMultiUrlPicker>("imageLink").link.LinkTitle;
+            }
+        }
+        else if (!model.Value<bool>("disableLightWindow"))
+        {
+            linkUrl = model.Value<IPublishedContent>("image").Url;
+        }
+
+        <div class="item @itemClass @imageStyle.CircleClass item_image @animation.AnimationClass" data-os-animation="@animation.AnimationStyle" data-os-animation-delay="@animation.AnimationDelay">
+            <div class="inner">
+                <div class="image @imageStyle.CircleClass">
+                    @if (linkUrl != String.Empty)
+                    {
+                        @:<a href="@linkUrl" @Html.Raw(title) @Html.Raw(footer) target="@linkTarget" @Html.Raw(lightWindow) @Html.Raw(linkTitle)>
+                        }
+                    <img class="@imageStyle.CircleClass lazyload" src="@(model.Value<IPublishedContent>("image").GetCropUrl(cropAlias: imageStyle.CropAlias, width: imageStyle.WidthSmall, height: imageStyle.HeightSmall))" data-src="@(model.Value<IPublishedContent>("image").GetCropUrl(cropAlias: imageStyle.CropAlias))" alt="@(model.Value<string>("thumbnailImageAltText"))">
+
+                    @if (linkUrl != String.Empty)
+                    {
+                    @:</a>
+                }
+                    @if (model.HasValue("imageCaption"))
+                    {
+                        <div class="caption">@(model.Value<string>("imageCaption"))</div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
+}
