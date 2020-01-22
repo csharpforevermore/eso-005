@@ -1,0 +1,129 @@
+/*  
+---------------------------------------------------
+Burger menu
+---------------------------------------------------  
+*/
+
+header#site-header a.expand {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 300;
+    width: @small-header;
+    height: @small-header;
+    display: block;
+    text-indent: -9999px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out 0s;
+}
+header#site-header a.expand.active { 
+    background-color: @header-borders;
+}
+
+header#site-header a.expand::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: @base-border-width;
+    height: 100%;
+    background-color: @header-borders;
+}
+
+header#site-header a.expand span:before,
+header#site-header a.expand span,
+header#site-header a.expand span:after {
+    content: "";
+    display: block;
+    width: 30px;
+    height: 3px;
+    position: absolute;
+    left: 0;
+    background-color: @main-navigation-link;
+    opacity: 1;
+    transition: transform 0.4s ease-in-out 0s, left 0.4s ease-in-out 0s, top 0.4s ease-in-out 0s, width 0.3s ease-in-out 0s;
+}
+
+header#site-header a.expand span {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+header#site-header a.expand span:before {
+    top: -8px;
+}
+
+header#site-header a.expand span:after {
+    top: 8px;
+}
+
+header#site-header a.expand.active span {
+    width: 0;
+}
+
+header#site-header a.expand.active span:before,
+header#site-header a.expand.active span:after {
+    top: 0;
+    left: -15px;
+}
+
+header#site-header a.expand.active span::before {
+    transform: rotate(-45deg);
+}
+
+header#site-header a.expand.active span::after {
+    transform: rotate(45deg);
+}
+
+@media (min-width:0) and (max-width:@small-breakpoint) {
+
+    html.reveal-out {
+        overflow: hidden;
+    }
+
+    html.reveal-out #site {
+        max-height: 100%;
+    }
+    
+    header#site-header .navigation {
+        position: relative;
+        z-index: 5;
+    }
+    
+    html.reveal-out header#site-header .navigation {
+        overflow: auto;
+    }
+    
+    header#site-header .navigation .reveal {
+        display: none;
+    }
+    
+    html.reveal-out header#site-header .navigation .reveal {
+        display: block;
+    }
+
+}
+
+@media (min-width:@large-breakpoint) {
+
+    header#site-header .navigation {
+        -ms-flex: 1;   
+        flex: 1;
+    }
+    html.reveal-out {
+      overflow: auto;
+    }
+    html.reveal-out .navigation {
+      overflow: visible;
+    }
+    header#site-header a.expand {
+      display: none;
+    }
+    .navigation .reveal {
+      display: block;
+    }
+
+}

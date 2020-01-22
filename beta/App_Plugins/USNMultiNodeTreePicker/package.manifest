@@ -1,0 +1,48 @@
+﻿{
+    propertyEditors:[
+        {
+            alias: "USN.MultiNodeTreePicker",
+            name: "USN MultiNode TreePicker",
+			icon: "icon-page-add",
+			group: "pickers",
+            editor: {
+				valueType: "JSON",
+                view: "~/App_Plugins/USNMultiNodeTreePicker/views/multinodetreepicker-editor.html"
+            },
+			prevalues : {
+				fields: [
+					{
+					    label: "Picker start node location name",
+					    key: "pickerStartNodeName",
+						view: "textstring"
+					}
+					,
+					{
+						label: "Allow items of type",
+						key: "filter",
+						view: "contenttypepicker",
+						description: "Select the applicable content types"
+					}
+					,
+					{
+						label: "Show open button (this feature is in preview!)",
+						key: "showOpenButton",
+						view: "boolean",
+						description: "Opens the node in a dialog"
+					}					,
+					{
+						label: "Ignore User Start Nodes",
+						key: "ignoreUserStartNodes",
+						view: "boolean",
+						description: "Selecting this option allows a user to choose nodes that they normally don't have access to."
+					}
+				]
+			}
+        }
+    ],
+	javascript: [
+		"~/App_Plugins/USNMultiNodeTreePicker/js/multinodetreepicker-editor-controller.js"
+	],
+    css: [
+    ]
+}
